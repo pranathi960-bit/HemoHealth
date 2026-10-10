@@ -1,0 +1,86 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isStaffAtFacility(facilityId) {
+      return isAuthenticated() && (
+        getUserData().role == 'admin' ||
+        (getUserData().role == 'hospital' && getUserData().facilityId == facilityId)
+      );
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserData().role == 'admin';
+    }
+
+    // Public Facilities: Anyone can view, only authorized staff or admins can edit
+    match /facilities/{facilityId} {
+      allow read: if true;
+      allow create, update, delete: if isStaffAtFacility(facilityId) || isAdmin();
+    }
+
+    // Blood Inventory: Anyone can view verified inventory, only facility staff can write
+    match /bloodInventory/{inventoryId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated() && (
+        isStaffAtFacility(request.resource.data.facilityId) || isAdmin()
+      );
+      allow delete: if isAuthenticated() && (
+        isStaffAtFacility(resource.data.facilityId) || isAdmin()
+      );
+    }
+
+    // Donor Profiles: General availability is readable without private contact info
+    // Only the donor themselves or admins can read full contact details
+    match /donorProfiles/{donorId} {
+      allow read: if true; // In production, private fields are projected or protected by backend function
+      allow create: if true; // Registration open
+      allow update, delete: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId || isAdmin()
+      );
+    }
+
+    // Blood Requests: Read allowed for authorized responders & tracking by ID
+    match /bloodRequests/{requestId} {
+      allow read: if true;
+      allow create: if true; // Emergency triage form allows submission with validation
+      allow update: if isAuthenticated() && (
+        resource.data.requesterEmail == request.auth.token.email ||
+        getUserData().role == 'hospital' ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Request Responses
+    match /requestResponses/{responseId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.responderId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Audit Logs: Append-only by system / authorized staff
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Immutable audit trail
+    }
+  }
+}

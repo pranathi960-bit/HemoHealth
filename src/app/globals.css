@@ -1,26 +1,92 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --crimson-primary: #B91C3C;
+    --crimson-hover: #9F1239;
+    --burgundy-deep: #701A32;
+    --rose-soft: #FFF1F2;
+    --rose-tint: #FFE4E6;
+    
+    --background: #FAFAFA;
+    --surface: #FFFFFF;
+    --surface-elevated: #FFFFFF;
+    
+    --text-main: #18181B;
+    --text-secondary: #71717A;
+    --text-muted: #A1A1AA;
+    
+    --border-subtle: #E4E4E7;
+    --border-strong: #D4D4D8;
+    
+    --status-success: #15803D;
+    --status-success-bg: #DCFCE7;
+    --status-warning: #B45309;
+    --status-warning-bg: #FEF3C7;
+    --status-error: #B91C1C;
+    --status-error-bg: #FEE2E2;
+    --status-info: #0369A1;
+    --status-info-bg: #E0F2FE;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--background);
+  color: var(--text-main);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
+}
+
+/* Pulse animation for emergency badges */
+@keyframes emergencyPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(185, 28, 60, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 8px rgba(185, 28, 60, 0);
+  }
+}
+
+.animate-emergency-pulse {
+  animation: emergencyPulse 2s infinite ease-in-out;
+}
+
+/* Blood Drop float animation */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
+/* Glassmorphism card helper */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(228, 228, 231, 0.8);
 }
